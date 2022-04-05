@@ -74,6 +74,10 @@
           // The color of the needle
           color: 'rgba(0, 0, 0, 1)'
         },
+        ticks: {
+          data: [0,...data],
+          color: '#f00',
+        },
         valueLabel: {
           formatter: Math.round
         }
@@ -90,6 +94,7 @@
         dataset.data = randomData();
         dataset.value = randomValue(dataset.data);
       });
+      config.options.ticks = randomData();
 
       window.myGauge.update();
     });

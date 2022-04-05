@@ -133,6 +133,49 @@ const GaugeController = Chart.controllers.doughnut.extend({
 
     ctx.restore();
   },
+  drawTicks(ease) {
+    if (!this.chart.animating) {
+      // triggered when hovering
+      ease = 1;
+    }
+    const {
+      ctx,
+      config,
+      outerRadius,
+    } = this.chart;
+    const {
+      data=[],
+      color,
+    } = config.options.ticks;
+    const dataset = config.data.datasets[this.index];
+    
+    data.forEach(tick => {
+      const { previous } = this.getMeta();
+      // center
+      const { dx, dy } = this.getTranslation(this.chart);
+      // interpolate
+      const origin = this.getAngle({ chart: this.chart, valuePercent: previous.valuePercent });
+      // TODO valuePercent is in current.valuePercent also
+      const target = this.getAngle({ chart: this.chart, valuePercent: this.getValuePercent(dataset, tick) });
+      const angle = origin + (target - origin) * ease;
+      ctx.save();
+      ctx.translate(dx, dy);
+      // Draw ticks
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(outerRadius, 0);
+      ctx.lineTo(outerRadius + 13, 0);
+      ctx.strokeStyle = color;
+      ctx.stroke();
+      // Draw ticks value
+      ctx.translate(outerRadius + 18, 0)
+      ctx.textAlign = "top";
+      ctx.rotate(Math.PI / 2)
+      ctx.fillStyle = color; // draw circle
+      ctx.fillText(tick, 0, 0);
+      ctx.restore();
+    })
+  },
   drawValueLabel(ease) { // eslint-disable-line no-unused-vars
     if (!this.chart.config.options.valueLabel.display) {
       return;
@@ -202,6 +245,7 @@ const GaugeController = Chart.controllers.doughnut.extend({
   // overrides
   update(reset) {
     const dataset = this.chart.config.data.datasets[this.index];
+    const ticks = this.chart.config.options.ticks;
     dataset.minValue = dataset.minValue || 0;
 
     const meta = this.getMeta();
@@ -243,7 +287,7 @@ const GaugeController = Chart.controllers.doughnut.extend({
   },
   draw(ease) {
     Chart.controllers.doughnut.prototype.draw.call(this, ease);
-
+    this.drawTicks(ease);
     this.drawNeedle(ease);
     this.drawValueLabel(ease);
   },
